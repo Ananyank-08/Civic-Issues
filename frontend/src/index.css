@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1e2a38;
+  --color-primary-light: #2c3e50;
+  --color-accent: #5fa8d3;
+  --color-accent-light: #eaf1f8;
+  --color-accent-glow: rgba(95, 168, 211, 0.15);
+  --color-surface: #f4f7fb;
+  --color-surface-card: rgba(255, 255, 255, 0.75);
+  --color-text-heading: #2c3e50;
+  --color-text-muted: #7b8a97;
+  --color-success: #6fcf97;
+  --color-warning: #f2c94c;
+  --color-danger: #eb5757;
+
+  --radius-2xl: 20px;
+  --radius-3xl: 30px;
+
+  --shadow-soft: 0 8px 25px rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 12px 35px rgba(0, 0, 0, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-text-heading antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    @apply tracking-tight font-bold;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/75 backdrop-blur-xl border border-white/20 shadow-soft transition-all duration-300;
+  }
+  
+  .glass-card-hover {
+    @apply hover:-translate-y-1.5 hover:shadow-premium;
+  }
+
+  .btn {
+    @apply px-6 py-2.5 rounded-3xl font-semibold transition-all duration-300 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-light hover:shadow-lg hover:shadow-primary/20 active:scale-95;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-white hover:opacity-90 hover:shadow-lg hover:shadow-accent/20 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply bg-white border border-gray-100 text-primary hover:bg-gray-50 active:scale-95;
+  }
+
+  .input-saas {
+    @apply w-full px-4 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all duration-300;
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-reveal {
+  animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Map specific overrides */
+.leaflet-container {
+  @apply rounded-2xl shadow-soft h-full w-full;
+}
