@@ -114,7 +114,7 @@ npm run dev
 | POST | `/detect` | CNN: image → category + confidence |
 | GET | `/health` | Health check |
 
-> **Note:** The ML service currently uses rule-based mock inference. To activate real models, replace the `nlp_categorize()` and `image_categorize_mock()` functions in `ml-service/main.py` with DistilBERT and MobileNetV2 inference code.
+> **Note:** The ML service has been transitioned to fully custom Keras/Tensorflow Models predicting across 8 specific categories based on a trained Mysore localized dataset!
 
 ---
 
@@ -134,22 +134,26 @@ Otherwise                   →  Flag mismatch (admin review)
 | Role | Capabilities |
 |---|---|
 | **Citizen** | Register, submit complaints, track own complaints, upvote, comment |
-| **Admin** | All citizen actions + view all complaints, update status, resolve mismatches, view charts |
+| **Department Staff** | Dedicated dashboard to view assigned issues, escalate priority, update status to 'Resolved', view issue locations on map |
+| **Admin** | 'Bird's Eye View' of all city issues, manually assign AI mismatch cases, monitor analytics/heatmaps |
 
-> **First registered user automatically becomes Admin.**
+> **Default Seed Users:** `admin@mysore.gov` connects to Admin Dashboard. Seven unique department logins (e.g. `pothole@mysore.gov`) connect directly to their specialized field dashboards.
 
 ---
 
 ## Department Routing
 
-| Issue Category | Department |
+The AI handles the dispatch! It categorizes into 7 strict nodes. If the AI detects an NLP/Image mismatch, the automatic sequence aborts and parks the issue in the Admin queue for review.
+
+| Issue Category | Designated Department |
 |---|---|
-| Pothole, Road Damage | Road & Infrastructure |
-| Garbage, Open Drain | Sanitation |
-| Water Leakage, Drainage Block | Water Supply & Drainage |
-| Streetlight Issue, Power Outage | Electricity / Streetlights |
-| Park Damage, Tree Fall | Public Property & Parks |
-| Traffic Signal | Traffic & Safety |
+| Pothole | Pothole Department |
+| Garbage | Garbage Department |
+| Waterleakage | Water Leakage Department |
+| Streetlight | Streetlight Department |
+| Treefall | Treefall Department |
+| Traffic Signal | Traffic Signal Department |
+| Other | General / Others |
 
 ---
 
@@ -164,8 +168,9 @@ Otherwise                   →  Flag mismatch (admin review)
 - ✅ Location picker with Nominatim reverse geocoding
 - ✅ Admin dashboard with Recharts bar + line charts
 - ✅ Mismatch review panel (side-by-side AI comparison)
+- ✅ Simulated Email Pipeline (Triggers on 'Resolved' state changes)
 - ✅ Community upvotes + comments
-- ✅ Role-based access control (JWT)
+- ✅ Strict Role-Based Access Control (JWT integration across Citizen, Admin, Depts)
 - ✅ Admin audit log for all overrides
 - ✅ Priority sorting (High → Medium → Low)
 - ✅ Complaint lifecycle tracking (Pending → In Progress → Resolved)
