@@ -40,3 +40,7 @@ htmlcov/
 
 # Logs
 *.log
+training_log.txt
+
+# Datasets and Large Files
+ml-service/imagedataset/

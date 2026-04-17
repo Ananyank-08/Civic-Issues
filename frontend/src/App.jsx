@@ -1,15 +1,15 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Navbar'
 import ProtectedRoute from './components/Layout/ProtectedRoute'
-import LandingPage    from './pages/LandingPage'
-import MapPage        from './pages/MapPage'
-import SubmitPage     from './pages/SubmitPage'
-import DashboardPage  from './pages/DashboardPage'
-import AdminPage      from './pages/AdminPage'
-import MismatchPage   from './pages/MismatchPage'
-import Login          from './components/Auth/Login'
-import Register       from './components/Auth/Register'
-import { Toaster }    from 'react-hot-toast'
+import LandingPage from './pages/LandingPage'
+import MapPage from './pages/MapPage'
+import SubmitPage from './pages/SubmitPage'
+import DashboardPage from './pages/DashboardPage'
+import AdminPage from './pages/AdminPage'
+import MismatchPage from './pages/MismatchPage'
+import Login from './components/Auth/Login'
+import Register from './components/Auth/Register'
+import { Toaster } from 'react-hot-toast'
 
 export default function App() {
   return (
@@ -25,7 +25,7 @@ export default function App() {
             fontSize: '0.9rem',
           },
           success: { iconTheme: { primary: '#10B981', secondary: '#1A1A35' } },
-          error:   { iconTheme: { primary: '#EF4444', secondary: '#1A1A35' } },
+          error: { iconTheme: { primary: '#EF4444', secondary: '#1A1A35' } },
         }}
       />
 
@@ -33,9 +33,9 @@ export default function App() {
 
       <Routes>
         {/* Public */}
-        <Route path="/"        element={<LandingPage />} />
-        <Route path="/map"     element={<MapPage />} />
-        <Route path="/login"   element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Citizen */}
