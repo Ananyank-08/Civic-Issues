@@ -14,9 +14,7 @@ import {
 const STATUSES = ['Pending', 'In Progress', 'Resolved']
 const PRIORITIES = ['', 'High', 'Medium', 'Low']
 const DEPTS = [
-  '', 'Road & Infrastructure', 'Sanitation', 'Water Supply & Drainage',
-  'Electricity / Streetlights', 'Public Property & Parks', 'Traffic & Safety',
-  'Pending Review', 'Others',
+  '', 'Garbage', 'Pothole', 'Streetlight', 'Traffic Signal', 'Treefall', 'Waterleakage', 'Other'
 ]
 
 export default function AdminDashboard() {
@@ -58,6 +56,20 @@ export default function AdminDashboard() {
       qc.invalidateQueries(['admin-stats'])
     },
     onError: () => toast.error('Update failed'),
+  })
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => api.get('/departments').then(r => r.data),
+  })
+
+  const assignDepartment = useMutation({
+    mutationFn: ({ id, department_id }) => api.post(`/complaints/${id}/assign-department`, { department_id }),
+    onSuccess: () => {
+      toast.success('Complaint assigned to department')
+      refetch()
+    },
+    onError: () => toast.error('Assignment failed'),
   })
 
   const updateArea = useMutation({
@@ -320,7 +332,7 @@ export default function AdminDashboard() {
                           <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-gray-100">Area</th>
                           <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-gray-100">Priority</th>
                           <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-gray-100">Status</th>
-                          <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-gray-100">Action</th>
+                          <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] border-b border-gray-100">Assignment</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -352,11 +364,16 @@ export default function AdminDashboard() {
                             <td className="px-8 py-5 scale-90 origin-left"><StatusBadge status={c.status} /></td>
                             <td className="px-8 py-5">
                               <select
-                                className="bg-gray-50 border-none rounded-lg py-1.5 px-3 text-xs font-black text-primary ring-1 ring-gray-200 focus:ring-accent transition-all"
-                                value={c.status}
-                                onChange={e => updateStatus.mutate({ id: c.id, status: e.target.value })}
+                                className="bg-gray-50 border-none rounded-lg py-1.5 px-3 text-xs font-black text-primary ring-1 ring-gray-200 focus:ring-accent transition-all max-w-[120px]"
+                                value={c.assignedDepartmentId || ""}
+                                onChange={e => {
+                                  if (e.target.value) {
+                                    assignDepartment.mutate({ id: c.id, department_id: e.target.value })
+                                  }
+                                }}
                               >
-                                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                                <option value="">Unassigned</option>
+                                {departments.map(d => <option key={d.id} value={d.id} title={d.name}>{d.name.split(' ')[0]}</option>)}
                               </select>
                             </td>
                           </motion.tr>

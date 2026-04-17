@@ -24,7 +24,9 @@ export default function Login() {
       const { data } = await api.post('/auth/login', form)
       dispatch(loginSuccess(data))
       toast.success(`Welcome back, ${data.name}!`)
-      navigate(data.role === 'admin' ? '/admin' : '/dashboard')
+      if (data.role === 'admin') navigate('/admin')
+      else if (data.role === 'DEPARTMENT_STAFF') navigate('/department')
+      else navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.')
     } finally {

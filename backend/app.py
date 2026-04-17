@@ -30,11 +30,13 @@ from routes.auth import auth_bp
 from routes.complaints import complaints_bp
 from routes.map_routes import map_bp
 from routes.stats import stats_bp
+from routes.departments import departments_bp
 
 app.register_blueprint(auth_bp, url_prefix="/api")
 app.register_blueprint(complaints_bp, url_prefix="/api")
 app.register_blueprint(map_bp, url_prefix="/api")
 app.register_blueprint(stats_bp, url_prefix="/api")
+app.register_blueprint(departments_bp, url_prefix="/api")
 
 
 @app.route("/api/health")

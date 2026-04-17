@@ -7,6 +7,7 @@ import SubmitPage from './pages/SubmitPage'
 import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
 import MismatchPage from './pages/MismatchPage'
+import DepartmentDashboard from './pages/DepartmentDashboard'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
 import { Toaster } from 'react-hot-toast'
@@ -40,10 +41,17 @@ export default function App() {
 
         {/* Citizen */}
         <Route path="/submit" element={
-          <ProtectedRoute><SubmitPage /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['citizen']}><SubmitPage /></ProtectedRoute>
         } />
         <Route path="/dashboard" element={
-          <ProtectedRoute><DashboardPage /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['citizen']}><DashboardPage /></ProtectedRoute>
+        } />
+
+        {/* Department */}
+        <Route path="/department" element={
+          <ProtectedRoute allowedRoles={['DEPARTMENT_STAFF', 'admin']}>
+            <DepartmentDashboard />
+          </ProtectedRoute>
         } />
 
         {/* Admin */}

@@ -25,7 +25,9 @@ export default function Navbar() {
   const navLinks = isAuthenticated
     ? (user?.role === 'admin'
         ? ['Live Map', 'Admin Panel']
-        : ['Live Map', 'My Reports', 'Report Issue'])
+        : user?.role === 'DEPARTMENT_STAFF'
+          ? ['Live Map', 'Department Panel']
+          : ['Live Map', 'My Reports', 'Report Issue'])
     : ['Live Map', 'About', 'Features', 'How It Works', 'Contact']
 
   const resolveLink = link => {
@@ -35,11 +37,13 @@ export default function Navbar() {
         ? { type: 'route', to: '/map' }
         : path === '/admin-panel'
           ? { type: 'route', to: '/admin' }
-          : path === '/my-reports'
-            ? { type: 'route', to: '/dashboard' }
-            : path === '/report-issue'
-              ? { type: 'route', to: '/submit' }
-              : { type: 'route', to: path }
+          : path === '/department-panel'
+            ? { type: 'route', to: '/department' }
+            : path === '/my-reports'
+              ? { type: 'route', to: '/dashboard' }
+              : path === '/report-issue'
+                ? { type: 'route', to: '/submit' }
+                : { type: 'route', to: path }
     }
 
     if (link === 'Live Map') return { type: 'route', to: '/map' }
@@ -149,9 +153,10 @@ export default function Navbar() {
             {!isAuthenticated && <a href={anchorHref('#features')} className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Features</a>}
             {!isAuthenticated && <a href={anchorHref('#how-it-works')} className="font-bold text-primary" onClick={() => setMenuOpen(false)}>How It Works</a>}
             {!isAuthenticated && <a href={anchorHref('#contact')} className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Contact</a>}
-            {isAuthenticated && user?.role !== 'admin' && <Link to="/submit" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Report Issue</Link>}
-            {isAuthenticated && user?.role !== 'admin' && <Link to="/dashboard" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>My Reports</Link>}
+            {isAuthenticated && user?.role === 'citizen' && <Link to="/submit" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Report Issue</Link>}
+            {isAuthenticated && user?.role === 'citizen' && <Link to="/dashboard" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>My Reports</Link>}
             {user?.role === 'admin' && <Link to="/admin" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Admin Panel</Link>}
+            {user?.role === 'DEPARTMENT_STAFF' && <Link to="/department" className="font-bold text-primary" onClick={() => setMenuOpen(false)}>Department Panel</Link>}
             <hr className="border-gray-50" />
             <div className="flex flex-col gap-3">
               {isAuthenticated ? (

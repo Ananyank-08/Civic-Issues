@@ -36,6 +36,7 @@ def _serialize(c, current_user_id=None):
         "finalCategory": c.get("finalCategory"),
         "mismatch": c.get("mismatch", False),
         "department": c.get("department", ""),
+        "assignedDepartmentId": str(c.get("assignedDepartmentId", "")),
         "status": c.get("status", "Pending"),
         "location": {
             "lat": c["location"]["coordinates"][1] if c.get("location") else None,
@@ -139,6 +140,17 @@ def submit_complaint():
     location_doc = {"type": "Point", "coordinates": [lng, lat]}
     duplicate = _is_duplicate(nlp_category, location_doc)
 
+    # Auto-assign to correct department based on categorization
+    assigned_dept_id = None
+    if not mismatch:
+        cat_lower = final_category.lower().replace(" ", "")
+        all_depts = list(db.departments.find({}))
+        dept_map = {d["name"].lower().replace(" ", ""): str(d["_id"]) for d in all_depts}
+        
+        assigned_dept_id = dept_map.get(cat_lower)
+        if not assigned_dept_id:
+            assigned_dept_id = dept_map.get("other")
+
     # 6. Build document
     now = datetime.utcnow()
     complaint_doc = {
@@ -149,6 +161,7 @@ def submit_complaint():
         "nlpPriority": nlp_priority,
         "imageCategory": image_category,
         "finalCategory": final_category,
+        "assignedDepartmentId": assigned_dept_id,
         "mismatch": mismatch,
         "department": department,
         "status": "Pending",
@@ -238,18 +251,76 @@ def get_complaint(complaint_id):
     return jsonify(_serialize(c, user_id)), 200
 
 
-# ── Update status (admin) ────────────────────────────────────
+# ── Update status (admin or department) ───────────────────────
 
 @complaints_bp.route("/complaints/<complaint_id>/status", methods=["PATCH"])
 @jwt_required()
 def update_status(complaint_id):
     user_id = get_jwt_identity()
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    is_staff = user.get("role") == "DEPARTMENT_STAFF"
+    
+    if not is_staff:
+        # If the user is an admin or citizen, block them explicitly.
+        return jsonify({"error": "Only Department Staff can update the status of issues."}), 403
+
+    c = db.complaints.find_one({"_id": ObjectId(complaint_id)})
+    if not c:
+        return jsonify({"error": "Complaint not found"}), 404
+        
+    # Staff can only update complaints assigned to their department
+    if str(c.get("assignedDepartmentId")) != str(user.get("departmentId")):
+        return jsonify({"error": "Complaint not assigned to your department"}), 403
+
+    new_status = request.get_json().get("status")
+    notes = request.get_json().get("notes", "")
+
+    old_status = c.get("status")
+
+    db.complaints.update_one(
+        {"_id": ObjectId(complaint_id)},
+        {"$set": {"status": new_status, "updatedAt": datetime.utcnow()}}
+    )
+
+    # Log to Status History
+    db.status_history.insert_one({
+        "complaintId": str(complaint_id),
+        "oldStatus": old_status,
+        "newStatus": new_status,
+        "updatedBy": user_id,
+        "notes": notes,
+        "updatedAt": datetime.utcnow()
+    })
+
+    # Simulated Email Notification (Phase 1)
+    citizen = db.users.find_one({"_id": c.get("userId")})
+    if citizen:
+        print(f"\n📧 [SIMULATED EMAIL NOTIFICATION]")
+        print(f"To: {citizen.get('email')}")
+        print(f"Subject: Civic Issue #{complaint_id[:6].upper()} Status Updated")
+        print(f"Message: Your complaint has been updated from '{old_status}' to '{new_status}'.")
+        if notes:
+            print(f"Notes: {notes}")
+        print("----------------------------------------\n")
+
+    return jsonify({"success": True, "status": new_status}), 200
+
+# ── Assign Department (admin only) ───────────────────────────
+
+@complaints_bp.route("/complaints/<complaint_id>/assign-department", methods=["POST"])
+@jwt_required()
+def assign_department(complaint_id):
+    user_id = get_jwt_identity()
     if not _require_admin(user_id):
         return jsonify({"error": "Admin access required"}), 403
 
-    new_status = request.get_json().get("status")
-    if new_status not in ALL_STATUSES:
-        return jsonify({"error": f"Status must be one of {ALL_STATUSES}"}), 400
+    dept_id = request.get_json().get("department_id")
+    if not dept_id:
+        return jsonify({"error": "department_id is required"}), 400
 
     c = db.complaints.find_one({"_id": ObjectId(complaint_id)})
     if not c:
@@ -257,20 +328,25 @@ def update_status(complaint_id):
 
     db.complaints.update_one(
         {"_id": ObjectId(complaint_id)},
-        {"$set": {"status": new_status, "updatedAt": datetime.utcnow()}}
+        {"$set": {
+            "assignedDepartmentId": dept_id,
+            "assignedAt": datetime.utcnow()
+        }}
     )
 
-    # Audit log
-    db.admin_logs.insert_one({
-        "adminId": ObjectId(user_id),
-        "complaintId": ObjectId(complaint_id),
-        "action": "status_update",
-        "oldValue": c["status"],
-        "newValue": new_status,
-        "timestamp": datetime.utcnow(),
-    })
-
     return jsonify({"success": True}), 200
+
+# ── Status History ───────────────────────────────────────────
+
+@complaints_bp.route("/complaints/<complaint_id>/history", methods=["GET"])
+@jwt_required()
+def get_complaint_history(complaint_id):
+    history = list(db.status_history.find({"complaintId": str(complaint_id)}, sort=[("updatedAt", -1)]))
+    for h in history:
+        h["id"] = str(h.pop("_id"))
+        h["updatedAt"] = h["updatedAt"].isoformat() if h.get("updatedAt") else None
+    return jsonify(history), 200
+
 
 
 # ── Update Area (admin) ──────────────────────────────────────
